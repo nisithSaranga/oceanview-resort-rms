@@ -1,4 +1,4 @@
 package com.oceanview.resort.mapper;
 
-public class Authmapper {
+public class AuthMapper {
 }

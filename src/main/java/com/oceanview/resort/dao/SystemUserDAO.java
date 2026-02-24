@@ -1,4 +1,4 @@
-package com.oceanview.resort.com.oceanview.resort.dao;
+package com.oceanview.resort.dao;
 
 public interface SystemUserDAO {
 }
