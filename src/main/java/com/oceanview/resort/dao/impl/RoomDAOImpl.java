@@ -1,5 +1,6 @@
 package com.oceanview.resort.dao.impl;
 
+import com.oceanview.resort.config.DBConnectionManager;
 import com.oceanview.resort.dao.RoomDAO;
 import com.oceanview.resort.entity.Room;
 
@@ -9,6 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class RoomDAOImpl implements RoomDAO {
+
+    private final DBConnectionManager db;
+
+    public RoomDAOImpl() {
+        this.db = DBConnectionManager.getInstance();
+    }
     @Override
     public Optional<Room> findById(int roomId) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement findById");
@@ -29,5 +36,6 @@ public class RoomDAOImpl implements RoomDAO {
         throw new UnsupportedOperationException("TODO: implement updateAvailability");
     }
 }
+
 
 

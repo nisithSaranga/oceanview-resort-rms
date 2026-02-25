@@ -1,5 +1,6 @@
 package com.oceanview.resort.dao.impl;
 
+import com.oceanview.resort.config.DBConnectionManager;
 import com.oceanview.resort.dao.ReservationDAO;
 import com.oceanview.resort.entity.Reservation;
 
@@ -9,6 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class ReservationDAOImpl implements ReservationDAO {
+    private final DBConnectionManager db;
+
+    public ReservationDAOImpl() {
+        this.db = DBConnectionManager.getInstance();
+    }
     @Override
     public String create(Reservation reservation) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement create");
@@ -39,3 +45,4 @@ public class ReservationDAOImpl implements ReservationDAO {
         throw new UnsupportedOperationException("TODO: implement existsOverlappingReservation");
     }
 }
+
