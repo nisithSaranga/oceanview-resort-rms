@@ -13,37 +13,32 @@ import com.oceanview.resort.dao.impl.ReservationDAOImpl;
 import com.oceanview.resort.dao.impl.RoomDAOImpl;
 import com.oceanview.resort.dao.impl.SystemUserDAOImpl;
 
-/*
- * Factory Method style DAO factory.
- * Creates DAO implementations and returns them as interface types.
- */
-public class DAOFactory {
 
-    public DAOFactory() {
-        // no state for now
-    }
+public final class DAOFactory {
 
-    public SystemUserDAO getSystemUserDAO() {
+    private DAOFactory() {}
+
+    public static SystemUserDAO getSystemUserDAO() {
         return new SystemUserDAOImpl();
     }
 
-    public GuestDAO getGuestDAO() {
+    public static GuestDAO getGuestDAO() {
         return new GuestDAOImpl();
     }
 
-    public RoomDAO getRoomDAO() {
+    public static RoomDAO getRoomDAO() {
         return new RoomDAOImpl();
     }
 
-    public ReservationDAO getReservationDAO() {
+    public static ReservationDAO getReservationDAO() {
         return new ReservationDAOImpl();
     }
 
-    public InvoiceDAO getInvoiceDAO() {
+    public static InvoiceDAO getInvoiceDAO() {
         return new InvoiceDAOImpl();
     }
 
-    public InvoiceLineItemDAO getInvoiceLineItemDAO() {
+    public static InvoiceLineItemDAO getInvoiceLineItemDAO() {
         return new InvoiceLineItemDAOImpl();
     }
 }
