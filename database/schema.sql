@@ -1,1 +1,3 @@
--- Database schema placeholder (Commit 2)
+-- OceanView Resort RMS schema setup
+    CREATE DATABASE IF NOT EXISTS oceanview_resort;
+    USE oceanview_resort;
