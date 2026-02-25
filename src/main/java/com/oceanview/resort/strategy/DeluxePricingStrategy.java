@@ -5,16 +5,16 @@ import java.math.BigDecimal;
 public class DeluxePricingStrategy implements PricingStrategy {
 
     @Override
-    public BigDecimal calculateTotal(BigDecimal baseRatePerNight, long numberOfNights) {
+    public BigDecimal calculateTotal(BigDecimal baseRatePerNight, int nights) {
         if (baseRatePerNight == null) {
             throw new IllegalArgumentException("baseRatePerNight cannot be null");
         }
-        if (numberOfNights <= 0) {
+        if (nights <= 0) {
             throw new IllegalArgumentException("numberOfNights must be > 0");
         }
 
         // No extra markup yet; pricing rules can be refined later.
-        return baseRatePerNight.multiply(BigDecimal.valueOf(numberOfNights));
+        return baseRatePerNight.multiply(BigDecimal.valueOf(nights));
     }
 }
 
