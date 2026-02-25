@@ -13,15 +13,14 @@ import com.oceanview.resort.dao.impl.ReservationDAOImpl;
 import com.oceanview.resort.dao.impl.RoomDAOImpl;
 import com.oceanview.resort.dao.impl.SystemUserDAOImpl;
 
+/*
+ * Factory Method style DAO factory.
+ * Creates DAO implementations and returns them as interface types.
+ */
 public class DAOFactory {
 
-    private static final DAOFactory INSTANCE = new DAOFactory();
-
-    private DAOFactory() {
-    }
-
-    public static DAOFactory getInstance() {
-        return INSTANCE;
+    public DAOFactory() {
+        // no state for now
     }
 
     public SystemUserDAO getSystemUserDAO() {
