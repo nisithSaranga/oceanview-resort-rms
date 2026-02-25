@@ -11,31 +11,31 @@ import java.util.Optional;
 public class ReservationDAOImpl implements ReservationDAO {
     @Override
     public String create(Reservation reservation) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement create");
     }
 
     @Override
     public Optional<Reservation> findByReservationNo(String reservationNo) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findByReservationNo");
     }
 
     @Override
     public List<Reservation> findAll() throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findAll");
     }
 
     @Override
     public boolean update(Reservation reservation) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement update");
     }
 
     @Override
     public boolean deleteByReservationNo(String reservationNo) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement deleteByReservationNo");
     }
 
     @Override
     public boolean existsOverlappingReservation(int roomId, LocalDate checkIn, LocalDate checkOut) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement existsOverlappingReservation");
     }
 }

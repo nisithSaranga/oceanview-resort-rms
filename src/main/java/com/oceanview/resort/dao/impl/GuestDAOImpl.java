@@ -9,12 +9,12 @@ import java.util.Optional;
 public class GuestDAOImpl implements GuestDAO {
     @Override
     public int create(Guest guest) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement create");
     }
 
     @Override
     public Optional<Guest> findById(int guestId) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
-
+        throw new UnsupportedOperationException("TODO: implement findById");
     }
 }
+

@@ -9,11 +9,12 @@ import java.util.List;
 public class InvoiceLineItemDAOImpl implements InvoiceLineItemDAO {
     @Override
     public int[] createBatch(List<InvoiceLineItem> lineItems) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement createBatch");
     }
 
     @Override
     public List<InvoiceLineItem> findByInvoiceId(int invoiceId) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findByInvoiceId");
     }
 }
+

@@ -11,22 +11,23 @@ import java.util.Optional;
 public class RoomDAOImpl implements RoomDAO {
     @Override
     public Optional<Room> findById(int roomId) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findById");
     }
 
     @Override
     public List<Room> findAll() throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findAll");
     }
 
     @Override
     public List<Room> findAvailable(LocalDate checkIn, LocalDate checkOut) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement findAvailable");
     }
 
     @Override
     public boolean updateAvailability(int roomId, boolean available) throws SQLException {
-        throw new UnsupportedOperationException("TODO: implement <methodName>");
+        throw new UnsupportedOperationException("TODO: implement updateAvailability");
     }
 }
+
 
