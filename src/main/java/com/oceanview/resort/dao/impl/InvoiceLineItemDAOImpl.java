@@ -1,5 +1,6 @@
 package com.oceanview.resort.dao.impl;
 
+<<<<<<< Updated upstream
 import com.oceanview.resort.dao.InvoiceLineItemDAO;
 import com.oceanview.resort.entity.InvoiceLineItem;
 
@@ -15,6 +16,16 @@ public class InvoiceLineItemDAOImpl implements InvoiceLineItemDAO {
     @Override
     public List<InvoiceLineItem> findByInvoiceId(int invoiceId) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement findByInvoiceId");
+=======
+import com.oceanview.resort.config.DBConnectionManager;
+import com.oceanview.resort.dao.InvoiceLineItemDAO;
+
+public class InvoiceLineItemDAOImpl implements InvoiceLineItemDAO {
+    private final DBConnectionManager db;
+
+    public InvoiceLineItemDAOImpl() {
+        this.db = DBConnectionManager.getInstance();
+>>>>>>> Stashed changes
     }
 }
 

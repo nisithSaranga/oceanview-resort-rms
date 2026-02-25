@@ -1,5 +1,6 @@
 package com.oceanview.resort.dao.impl;
 
+<<<<<<< Updated upstream
 import com.oceanview.resort.dao.RoomDAO;
 import com.oceanview.resort.entity.Room;
 
@@ -28,6 +29,19 @@ public class RoomDAOImpl implements RoomDAO {
     public boolean updateAvailability(int roomId, boolean available) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement updateAvailability");
     }
+=======
+import com.oceanview.resort.config.DBConnectionManager;
+import com.oceanview.resort.dao.RoomDAO;
+
+public class RoomDAOImpl implements RoomDAO {
+
+    private final DBConnectionManager db;
+
+    public RoomDAOImpl() {
+        this.db = DBConnectionManager.getInstance();
+    }
+
+>>>>>>> Stashed changes
 }
 
 
