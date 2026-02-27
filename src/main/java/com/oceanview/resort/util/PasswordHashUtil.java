@@ -1,58 +1,71 @@
 package com.oceanview.resort.util;
 
-import java.nio.charset.StandardCharsets;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 public final class PasswordHashUtil {
 
-    private PasswordHashUtil() { }
+    private static final String ALGO = "PBKDF2WithHmacSHA256";
+    private static final int ITERATIONS = 65_536;
+    private static final int SALT_BYTES = 16;
+    private static final int KEY_LENGTH_BITS = 256;
+
+    private static final SecureRandom RNG = new SecureRandom();
+
+    private PasswordHashUtil() {}
 
     /**
-     * Hash a password using SHA-256 (coursework-friendly).
-     * Output: lowercase hex string.
+     * Output format stored in DB:
+     * pbkdf2$<iterations>$<saltBase64>$<hashBase64>
      */
-    public static String hashPassword(String plainPassword) {
-        if (plainPassword == null) {
-            throw new IllegalArgumentException("plainPassword cannot be null");
+    public static String hashPassword(char[] plainPassword) {
+        if (plainPassword == null || plainPassword.length == 0) {
+            throw new IllegalArgumentException("Password must not be blank");
         }
-        return sha256Hex(plainPassword);
+
+        byte[] salt = new byte[SALT_BYTES];
+        RNG.nextBytes(salt);
+
+        byte[] hash = pbkdf2(plainPassword, salt, ITERATIONS, KEY_LENGTH_BITS);
+
+        return "pbkdf2$" + ITERATIONS + "$"
+                + Base64.getEncoder().encodeToString(salt) + "$"
+                + Base64.getEncoder().encodeToString(hash);
     }
 
-    public static boolean verifyPassword(String plainPassword, String expectedHashHex) {
-        if (plainPassword == null || expectedHashHex == null) {
+    public static boolean verifyPassword(char[] plainPassword, String storedHash) {
+        if (plainPassword == null || plainPassword.length == 0) return false;
+        if (storedHash == null || storedHash.isBlank()) return false;
+
+        String[] parts = storedHash.split("\\$");
+        if (parts.length != 4) return false;
+        if (!"pbkdf2".equals(parts[0])) return false;
+
+        int iterations;
+        try {
+            iterations = Integer.parseInt(parts[1]);
+        } catch (NumberFormatException e) {
             return false;
         }
-        String actual = hashPassword(plainPassword);
-        return constantTimeEquals(actual, expectedHashHex);
+
+        byte[] salt = Base64.getDecoder().decode(parts[2]);
+        byte[] expected = Base64.getDecoder().decode(parts[3]);
+
+        byte[] actual = pbkdf2(plainPassword, salt, iterations, expected.length * 8);
+
+        return MessageDigest.isEqual(expected, actual); // constant-time compare
     }
 
-    private static String sha256Hex(String input) {
+    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLengthBits) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
-            return toHex(digest);
-        } catch (NoSuchAlgorithmException e) {
-            // Should never happen on a normal JDK
-            throw new IllegalStateException("SHA-256 not available", e);
+            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLengthBits);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGO);
+            return skf.generateSecret(spec).getEncoded();
+        } catch (Exception e) {
+            throw new IllegalStateException("Password hashing failed", e);
         }
-    }
-
-    private static String toHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(Character.forDigit((b >>> 4) & 0xF, 16));
-            sb.append(Character.forDigit(b & 0xF, 16));
-        }
-        return sb.toString();
-    }
-
-    private static boolean constantTimeEquals(String a, String b) {
-        if (a.length() != b.length()) return false;
-        int result = 0;
-        for (int i = 0; i < a.length(); i++) {
-            result |= a.charAt(i) ^ b.charAt(i);
-        }
-        return result == 0;
     }
 }
