@@ -1,48 +1,51 @@
 package com.oceanview.resort.util;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
 public final class PasswordHashUtil {
 
-    private static final String ALGO = "PBKDF2WithHmacSHA256";
-    private static final int ITERATIONS = 65_536;
-    private static final int SALT_BYTES = 16;
-    private static final int KEY_LENGTH_BITS = 256;
-
     private static final SecureRandom RNG = new SecureRandom();
+
+    // Safe defaults (works fine for coursework)
+    private static final int SALT_BYTES = 16;
+    private static final int ITERATIONS = 120_000;
+    private static final int KEY_LENGTH_BITS = 256;
 
     private PasswordHashUtil() {}
 
     /**
-     * Output format stored in DB:
-     * pbkdf2$<iterations>$<saltBase64>$<hashBase64>
+     * Output format: pbkdf2:<iterations>:<saltB64>:<hashB64>
      */
-    public static String hashPassword(char[] plainPassword) {
-        if (plainPassword == null || plainPassword.length == 0) {
-            throw new IllegalArgumentException("Password must not be blank");
+    public static String hash(String plainPassword) {
+        if (plainPassword == null || plainPassword.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null/blank");
         }
 
         byte[] salt = new byte[SALT_BYTES];
         RNG.nextBytes(salt);
 
-        byte[] hash = pbkdf2(plainPassword, salt, ITERATIONS, KEY_LENGTH_BITS);
+        byte[] derived = pbkdf2(plainPassword.toCharArray(), salt, ITERATIONS, KEY_LENGTH_BITS);
 
-        return "pbkdf2$" + ITERATIONS + "$"
-                + Base64.getEncoder().encodeToString(salt) + "$"
-                + Base64.getEncoder().encodeToString(hash);
+        return "pbkdf2:" + ITERATIONS + ":" +
+                Base64.getEncoder().encodeToString(salt) + ":" +
+                Base64.getEncoder().encodeToString(derived);
     }
 
-    public static boolean verifyPassword(char[] plainPassword, String storedHash) {
-        if (plainPassword == null || plainPassword.length == 0) return false;
-        if (storedHash == null || storedHash.isBlank()) return false;
+    public static boolean verify(String plainPassword, String storedHash) {
+        if (plainPassword == null || storedHash == null || storedHash.isBlank()) {
+            return false;
+        }
 
-        String[] parts = storedHash.split("\\$");
+        // expected: pbkdf2:120000:salt:hash
+        String[] parts = storedHash.split(":");
         if (parts.length != 4) return false;
-        if (!"pbkdf2".equals(parts[0])) return false;
+        if (!"pbkdf2".equalsIgnoreCase(parts[0])) return false;
 
         int iterations;
         try {
@@ -51,21 +54,44 @@ public final class PasswordHashUtil {
             return false;
         }
 
-        byte[] salt = Base64.getDecoder().decode(parts[2]);
-        byte[] expected = Base64.getDecoder().decode(parts[3]);
+        byte[] salt;
+        byte[] expected;
+        try {
+            salt = Base64.getDecoder().decode(parts[2]);
+            expected = Base64.getDecoder().decode(parts[3]);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
 
-        byte[] actual = pbkdf2(plainPassword, salt, iterations, expected.length * 8);
-
-        return MessageDigest.isEqual(expected, actual); // constant-time compare
+        byte[] actual = pbkdf2(plainPassword.toCharArray(), salt, iterations, expected.length * 8);
+        return constantTimeEquals(expected, actual);
     }
 
-    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLengthBits) {
+    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLenBits) {
         try {
-            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLengthBits);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(ALGO);
+            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLenBits);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             return skf.generateSecret(spec).getEncoded();
-        } catch (Exception e) {
-            throw new IllegalStateException("Password hashing failed", e);
+        } catch (GeneralSecurityException e) {
+            // Fallback for older JDKs if needed:
+            try {
+                PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLenBits);
+                SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+                return skf.generateSecret(spec).getEncoded();
+            } catch (GeneralSecurityException ex) {
+                throw new IllegalStateException("PBKDF2 not available", ex);
+            }
         }
+    }
+
+    private static boolean constantTimeEquals(byte[] a, byte[] b) {
+        if (a == null || b == null) return false;
+        if (a.length != b.length) return false;
+
+        int diff = 0;
+        for (int i = 0; i < a.length; i++) {
+            diff |= (a[i] ^ b[i]);
+        }
+        return diff == 0;
     }
 }
