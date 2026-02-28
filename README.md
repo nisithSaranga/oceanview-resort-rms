@@ -13,27 +13,28 @@ JUnit 5 (tests)
 
 **Architecture:**
 3-tier layered structure:
--Presentation: Servlets + JSON
--Business: Services + Controllers (orchestrate use cases)
--Persistence: DAO interfaces + DAO implementations (JDBC)
+* Presentation: Servlets + JSON
+* Business: Services + Controllers (orchestrate use cases)
+* Persistence: DAO interfaces + DAO implementations (JDBC)
 
 **Design Patterns Implemented**
--Singleton: DBConnectionManager (central DB config + connection creation)
--Factory Method / Simple Factory: DAOFactory (returns DAO interfaces backed by DAOImpl)
--Builder: ReservationRequestDTO.Builder (immutable request construction)
--Strategy: PricingStrategy (pricing calculation by room type)
+* Singleton: DBConnectionManager (central DB config + connection creation)
+* Factory Method / Simple Factory: DAOFactory (returns DAO interfaces backed by DAOImpl)
+* Builder: ReservationRequestDTO.Builder (immutable request construction)
+* Strategy: PricingStrategy (pricing calculation by room type)
 
 **Database setup**
--1. Create a MySQL database (example): oceanview_resort
--2. Run SQL scripts:
- - database/schema.sql
- - database/data.sql
--3. Local DB config (NOT committed)
- - Copy the template file:
- - src/main/resources/db.properties.example
- - Create your local file (same folder):
- - src/main/resources/db.properties
- - Fill in your own credentials.
+1. Create a MySQL database (example): oceanview_resort
+2. Run SQL scripts:
+   - 'database/schema.sql'
+   - 'database/data.sql'
+3. Local DB config (NOT committed)
+  - Copy the template file:
+   - 'src/main/resources/'
+db.properties.example
+  - Create your local file (same folder):
+   - 'src/main/resources/db.properties'
+  - Fill in your own credentials.
 
  **Expected keys in db.properties**
 ```properties
