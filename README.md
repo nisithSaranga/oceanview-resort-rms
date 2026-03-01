@@ -11,11 +11,23 @@ MySQL
 Jackson (JSON)
 JUnit 5 (tests)
 
-**Architecture:**
-3-tier layered structure:
-* Presentation: Servlets + JSON
-* Business: Services + Controllers (orchestrate use cases)
-* Persistence: DAO interfaces + DAO implementations (JDBC)
+**Data Access (DAO + Factory + DBConnectionManager)**
+
+This project uses a simple 3-tier layered architecture:
+
+- Presentation: Servlets (HTTP/JSON)
+- Business: Controllers + Services (use case orchestration)
+- Persistence: DAO interfaces + JDBC DAO implementations
+
+**How persistence is wired**
+- Services depend only on DAO interfaces* (e.g., SystemUserDAO) — not on JDBC classes.
+- Concrete JDBC implementations (e.g., SystemUserDAOImpl) are obtained via DAOFactory.
+- Each DAO implementation uses the *DBConnectionManager Singleton* to open JDBC connections.
+
+**DBConnectionManager (Singleton)**
+DBConnectionManager reads DB settings from src/main/resources/db.properties (local-only, ignored by Git) and provides Connection instances for DAOs.
+
+> db.properties is intentionally not committed. Use db.properties.example as a template and create your own local db.properties.
 
 **Design Patterns Implemented**
 * Singleton: DBConnectionManager (central DB config + connection creation)
@@ -29,12 +41,11 @@ JUnit 5 (tests)
    - 'database/schema.sql'
    - 'database/data.sql'
 3. Local DB config (NOT committed)
-  - Copy the template file:
-   - 'src/main/resources/'
-db.properties.example
-  - Create your local file (same folder):
-   - 'src/main/resources/db.properties'
-  - Fill in your own credentials.
+   - Copy: 'src/main/resources/
+    db.properties.example'
+   - To: 'src/main/resources/
+     db.properties'
+   - Fill in your own credentials.
 
  **Expected keys in db.properties**
 ```properties
