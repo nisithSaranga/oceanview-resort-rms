@@ -4,5 +4,5 @@ import com.oceanview.resort.dto.LoginRequestDTO;
 import com.oceanview.resort.dto.LoginResponseDTO;
 
 public interface AuthService {
-    LoginResponseDTO login(LoginRequestDTO request);
+    LoginResponseDTO login(LoginRequestDTO req);
 }
