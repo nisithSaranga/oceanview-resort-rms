@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface SystemUserDAO {
     Optional<SystemUser> findByUsername(String username) throws SQLException;
-    Optional<SystemUser> findById(int userId) throws SQLException;
+    Optional<SystemUser> findById(Integer userId) throws SQLException;
 }

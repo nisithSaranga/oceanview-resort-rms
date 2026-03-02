@@ -5,6 +5,7 @@ import com.oceanview.resort.enums.RoomType;
 import java.math.BigDecimal;
 
 public class Room {
+
     private int roomId;
     private String roomNumber;
     private RoomType roomType;
@@ -26,32 +27,16 @@ public class Room {
         return roomId;
     }
 
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
     public String getRoomNumber() {
         return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
     }
 
     public RoomType getRoomType() {
         return roomType;
     }
 
-    public void setRoomType(RoomType roomType) {
-        this.roomType = roomType;
-    }
-
     public BigDecimal getBaseRatePerNight() {
         return baseRatePerNight;
-    }
-
-    public void setBaseRatePerNight(BigDecimal baseRatePerNight) {
-        this.baseRatePerNight = baseRatePerNight;
     }
 
     public boolean isAvailable() {

@@ -2,33 +2,30 @@ package com.oceanview.resort.entity;
 
 import com.oceanview.resort.enums.UserRole;
 
-import java.time.LocalDateTime;
-
 public class SystemUser {
-    private int userId;
+
+    private Integer userId;
     private String username;
     private String passwordHash;
     private UserRole role;
     private boolean active;
-    private LocalDateTime createdAt;
 
     public SystemUser() {
     }
 
-    public SystemUser(int userId, String username, String passwordHash, UserRole role, boolean active, LocalDateTime createdAt) {
+    public SystemUser(Integer userId, String username, String passwordHash, UserRole role, boolean active) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
         this.role = role;
         this.active = active;
-        this.createdAt = createdAt;
     }
 
-    public int getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 
@@ -62,13 +59,5 @@ public class SystemUser {
 
     public void setActive(boolean active) {
         this.active = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }
