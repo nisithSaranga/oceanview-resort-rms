@@ -12,9 +12,7 @@ public class ReservationResponseDTO {
     private String message;
     private LocalDateTime createdAt;
 
-    public ReservationResponseDTO() {
-        // Required for JSON deserialization / frameworks
-    }
+    public ReservationResponseDTO() {}
 
     public ReservationResponseDTO(String reservationNo,
                                   ReservationStatus status,
