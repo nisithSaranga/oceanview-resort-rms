@@ -15,6 +15,7 @@ public class DBConnectionManager {
     private DBConnectionManager() {
         loadProperties();
         loadDriver();
+        validateRequiredProps();
     }
 
     public static DBConnectionManager getInstance() {
@@ -30,9 +31,9 @@ public class DBConnectionManager {
 
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(
-                dbProperties.getProperty("db.url"),
-                dbProperties.getProperty("db.username"),
-                dbProperties.getProperty("db.password")
+                required("db.url"),
+                required("db.username"),
+                required("db.password")
         );
     }
 
@@ -58,5 +59,19 @@ public class DBConnectionManager {
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException("MySQL JDBC Driver not found: " + driverClass, e);
         }
+    }
+
+    private void validateRequiredProps() {
+        required("db.url");
+        required("db.username");
+        required("db.password");
+    }
+
+    private String required(String key) {
+        String v = dbProperties.getProperty(key);
+        if (v == null || v.isBlank()) {
+            throw new IllegalStateException(key + " is missing in db.properties");
+        }
+        return v.trim();
     }
 }
