@@ -13,3 +13,4 @@ Thumbs.db
 *.log
 
 src/main/resources/db.properties
+tools/http/login_valid_local.json
