@@ -82,7 +82,7 @@ public class SystemUserDAOImpl implements SystemUserDAO {
         Timestamp ts = rs.getTimestamp("created_at");
         LocalDateTime createdAt = (ts != null) ? ts.toLocalDateTime() : null;
 
-        return new SystemUser(id, username, passwordHash, role, active, createdAt);
+        return new SystemUser(id, username, passwordHash, role, active);
     }
 
     private UserRole parseRole(String roleStr) throws SQLException {
