@@ -10,16 +10,15 @@ import com.oceanview.resort.service.AuthService;
 import com.oceanview.resort.util.PasswordHashUtil;
 
 import java.sql.SQLException;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 public class AuthServiceImpl implements AuthService {
 
     private final SystemUserDAO systemUserDAO;
 
     public AuthServiceImpl(SystemUserDAO systemUserDAO) {
-        this.systemUserDAO = Objects.requireNonNull(systemUserDAO,
-                "systemUserDAO must not be null");
+        this.systemUserDAO = Objects.requireNonNull(systemUserDAO, "systemUserDAO must not be null");
     }
 
     @Override
@@ -55,10 +54,10 @@ public class AuthServiceImpl implements AuthService {
             return AuthMapper.fail("Invalid credentials");
         }
 
-        boolean ok;
+        final boolean ok;
         try {
             ok = PasswordHashUtil.verify(password, user.getPasswordHash());
-        } catch (IllegalArgumentException ex) {
+        } catch (RuntimeException ex) {
             return AuthMapper.fail("Invalid credentials");
         }
 

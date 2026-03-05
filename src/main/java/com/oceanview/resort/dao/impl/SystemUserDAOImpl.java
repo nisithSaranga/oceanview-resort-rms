@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class SystemUserDAOImpl implements SystemUserDAO {
@@ -26,53 +28,44 @@ public class SystemUserDAOImpl implements SystemUserDAO {
         }
 
         final String sql =
-                "SELECT user_id, username, password_hash, role, active " +
+                "SELECT user_id, username, password_hash, role, active, created_at " +
                         "FROM system_user " +
                         "WHERE username = ? " +
                         "LIMIT 1";
 
-        try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection con = db.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, username.trim());
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
+                if (!rs.next()) return Optional.empty();
                 return Optional.of(mapRow(rs));
             }
-        } catch (IllegalArgumentException ex) {
-            // If role in DB is invalid/unexpected -> treat as not found (safe failure)
-            return Optional.empty();
         }
     }
 
     @Override
-    public Optional<SystemUser> findById(Integer userId) throws SQLException {
+    public Optional<SystemUser> findById(int userId) throws SQLException {
         if (userId <= 0) {
             return Optional.empty();
         }
 
         final String sql =
-                "SELECT user_id, username, password_hash, role, active " +
+                "SELECT user_id, username, password_hash, role, active, created_at " +
                         "FROM system_user " +
                         "WHERE user_id = ? " +
                         "LIMIT 1";
 
-        try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection con = db.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, userId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (!rs.next()) {
-                    return Optional.empty();
-                }
+                if (!rs.next()) return Optional.empty();
                 return Optional.of(mapRow(rs));
             }
-        } catch (IllegalArgumentException ex) {
-            return Optional.empty();
         }
     }
 
@@ -81,14 +74,25 @@ public class SystemUserDAOImpl implements SystemUserDAO {
         String username = rs.getString("username");
         String passwordHash = rs.getString("password_hash");
 
-        String roleRaw = rs.getString("role");
-        if (roleRaw == null) {
-            throw new IllegalArgumentException("role is null");
-        }
-        UserRole role = UserRole.valueOf(roleRaw.trim().toUpperCase());
+        String roleStr = rs.getString("role");
+        UserRole role = parseRole(roleStr);
 
         boolean active = rs.getBoolean("active");
 
-        return new SystemUser(id, username, passwordHash, role, active);
+        Timestamp ts = rs.getTimestamp("created_at");
+        LocalDateTime createdAt = (ts != null) ? ts.toLocalDateTime() : null;
+
+        return new SystemUser(id, username, passwordHash, role, active, createdAt);
+    }
+
+    private UserRole parseRole(String roleStr) throws SQLException {
+        if (roleStr == null || roleStr.isBlank()) {
+            throw new SQLException("system_user.role is NULL/blank in DB");
+        }
+        try {
+            return UserRole.valueOf(roleStr.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new SQLException("Invalid role value in DB: " + roleStr, ex);
+        }
     }
 }

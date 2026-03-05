@@ -4,8 +4,8 @@ public final class HashGenerator {
     private HashGenerator() {}
 
     public static void main(String[] args) {
-        // Change these values temporarily to generate what you need
-        String plain = "admin123";
+        // Change these values temporarily to generate what need
+        String plain = "change-me";
         String hash = PasswordHashUtil.hash(plain);
         System.out.println("PLAIN: " + plain);
         System.out.println("HASH : " + hash);
