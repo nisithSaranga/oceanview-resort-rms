@@ -105,6 +105,10 @@ See the markdown files under tools/http/ for ready-to-run commands:
 - Reservations: SMOKE_TESTS-reservation.md
 - Billing: SMOKE_TESTS-billing.md
 
+**CI/CD**
+
+GitHub Actions workflow: .github/workflows/ci.yml runs mvn clean test on pushes to main and via manual trigger.
+
 **Expected keys in db.properties**
 ```properties
 db.url=jdbc:mysql://localhost:3306/oceanview_resort?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
