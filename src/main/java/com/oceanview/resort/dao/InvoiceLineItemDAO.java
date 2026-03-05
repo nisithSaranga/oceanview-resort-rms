@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface InvoiceLineItemDAO {
-    int[] createBatch(List<InvoiceLineItem> lineItems) throws SQLException;
+
+    void saveAll(List<InvoiceLineItem> items) throws SQLException;
+
     List<InvoiceLineItem> findByInvoiceId(int invoiceId) throws SQLException;
 }

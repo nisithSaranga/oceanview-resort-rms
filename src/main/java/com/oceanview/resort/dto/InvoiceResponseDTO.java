@@ -12,13 +12,6 @@ public class InvoiceResponseDTO {
     public InvoiceResponseDTO() {
     }
 
-    public InvoiceResponseDTO(int invoiceId, String reservationNo, BigDecimal totalAmount, String message) {
-        this.invoiceId = invoiceId;
-        this.reservationNo = reservationNo;
-        this.totalAmount = totalAmount;
-        this.message = message;
-    }
-
     public int getInvoiceId() {
         return invoiceId;
     }
