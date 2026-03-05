@@ -17,6 +17,7 @@ public class InvoiceLineItemDAOImpl implements InvoiceLineItemDAO {
     @Override
     public int[] createBatch(List<InvoiceLineItem> lineItems) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement createBatch");
+
     }
 
     @Override
@@ -24,4 +25,3 @@ public class InvoiceLineItemDAOImpl implements InvoiceLineItemDAO {
         throw new UnsupportedOperationException("TODO: implement findByInvoiceId");
     }
 }
-

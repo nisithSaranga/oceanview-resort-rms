@@ -18,7 +18,9 @@ public class InvoiceDAOImpl implements InvoiceDAO {
     @Override
     public int create(Invoice invoice) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement create");
+
     }
+
     @Override
     public Optional<Invoice> findById(int invoiceId) throws SQLException {
         throw new UnsupportedOperationException("TODO: implement findById");
@@ -29,4 +31,3 @@ public class InvoiceDAOImpl implements InvoiceDAO {
         throw new UnsupportedOperationException("TODO: implement findByReservationNo");
     }
 }
-
