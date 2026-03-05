@@ -1,5 +1,7 @@
 package com.oceanview.resort.config;
 
+import com.mysql.cj.jdbc.Driver;
+
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,6 +15,15 @@ public final class DBConnectionManager {
     private final String url;
     private final String username;
     private final String password;
+
+    static {
+        try {
+            // Required in your Tomcat setup: ensure DriverManager can see MySQL driver
+            DriverManager.registerDriver(new Driver());
+        } catch (SQLException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     private DBConnectionManager() {
         Properties props = new Properties();

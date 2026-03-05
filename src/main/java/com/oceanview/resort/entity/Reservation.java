@@ -12,24 +12,12 @@ public class Reservation {
     private LocalDate checkOut;
     private ReservationStatus status;
     private LocalDateTime createdAt;
+
     private Guest guest;
     private Room room;
 
     public Reservation() {
-    }
-
-    public Reservation(String reservationNo,
-                       LocalDate checkIn,
-                       LocalDate checkOut,
-                       ReservationStatus status,
-                       Guest guest,
-                       Room room) {
-        this.reservationNo = reservationNo;
-        this.checkIn = checkIn;
-        this.checkOut = checkOut;
-        this.status = status;
-        this.guest = guest;
-        this.room = room;
+        // required for JDBC mapping / Jackson safety
     }
 
     public Reservation(String reservationNo,

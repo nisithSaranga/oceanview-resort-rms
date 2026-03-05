@@ -12,9 +12,7 @@ public class ReservationResponseDTO {
     private String message;
     private LocalDateTime createdAt;
 
-    public ReservationResponseDTO() {
-        // Required for JSON deserialization / frameworks
-    }
+    public ReservationResponseDTO() {}
 
     public ReservationResponseDTO(String reservationNo,
                                   ReservationStatus status,
@@ -28,43 +26,18 @@ public class ReservationResponseDTO {
         this.createdAt = createdAt;
     }
 
-    public String getReservationNo() {
-        return reservationNo;
-    }
+    public String getReservationNo() { return reservationNo; }
+    public void setReservationNo(String reservationNo) { this.reservationNo = reservationNo; }
 
-    public void setReservationNo(String reservationNo) {
-        this.reservationNo = reservationNo;
-    }
+    public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
 
-    public ReservationStatus getStatus() {
-        return status;
-    }
+    public int getRoomId() { return roomId; }
+    public void setRoomId(int roomId) { this.roomId = roomId; }
 
-    public void setStatus(ReservationStatus status) {
-        this.status = status;
-    }
+    public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
 
-    public int getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
