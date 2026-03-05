@@ -19,14 +19,17 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReservationServiceImpl implements ReservationService {
+
+    private static final Logger LOG = Logger.getLogger(ReservationServiceImpl.class.getName());
+    private static final SecureRandom RNG = new SecureRandom();
 
     private final ReservationDAO reservationDAO;
     private final RoomDAO roomDAO;
     private final GuestDAO guestDAO;
-
-    private static final SecureRandom RNG = new SecureRandom();
 
     public ReservationServiceImpl(ReservationDAO reservationDAO, RoomDAO roomDAO, GuestDAO guestDAO) {
         this.reservationDAO = Objects.requireNonNull(reservationDAO, "reservationDAO must not be null");
@@ -36,9 +39,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationResponseDTO createReservation(ReservationRequestDTO req) {
-        try {
-            validateCreateRequest(req);
+        validateCreateRequest(req);
 
+        try {
             // 1) Pick an available room by type
             List<Room> availableRooms = roomDAO.findAvailableByType(req.getRoomType());
             if (availableRooms == null || availableRooms.isEmpty()) {
@@ -46,7 +49,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
             Room selectedRoom = availableRooms.get(0);
 
-            // 2) Create guest (DAO sets generated id into Guest object)
+            // 2) Save guest (DAO should set generated id into Guest object)
             Guest guest = ReservationMapper.toGuest(req);
             guestDAO.save(guest);
 
@@ -61,7 +64,7 @@ public class ReservationServiceImpl implements ReservationService {
                     req.getCheckIn(),
                     req.getCheckOut(),
                     ReservationStatus.CREATED,
-                    null,
+                    null, // DB DEFAULT CURRENT_TIMESTAMP
                     guest,
                     selectedRoom
             );
@@ -75,12 +78,13 @@ public class ReservationServiceImpl implements ReservationService {
             out.setMessage("Reservation created");
             return out;
 
-        } catch (IllegalArgumentException ex) {
-            // input validation failure -> client problem
-            return fail(ex.getMessage());
         } catch (SQLException ex) {
+            LOG.log(Level.SEVERE,
+                    "createReservation failed. SQLState=" + ex.getSQLState() + ", Code=" + ex.getErrorCode(),
+                    ex);
             return fail("Reservation creation failed");
         } catch (RuntimeException ex) {
+            LOG.log(Level.SEVERE, "createReservation runtime failure", ex);
             return fail("Reservation creation failed");
         }
     }
@@ -115,7 +119,6 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             ReservationStatus newStatus = (req.getStatus() != null) ? req.getStatus() : existing.getStatus();
-
             Room newRoom = oldRoom;
 
             // Room relocation logic
@@ -158,41 +161,33 @@ public class ReservationServiceImpl implements ReservationService {
     // UML: void
     @Override
     public void cancelReservation(String reservationNo) {
-        if (isBlank(reservationNo)) {
-            throw new IllegalArgumentException("reservationNo is required");
-        }
+        if (isBlank(reservationNo)) throw new IllegalArgumentException("reservationNo is required");
 
         try {
             Reservation existing = reservationDAO.findByReservationNo(reservationNo.trim());
-
-            // Cancel = status change + room release
             reservationDAO.updateStatus(existing.getReservationNo(), ReservationStatus.CANCELLED);
 
             if (existing.getRoom() != null) {
                 roomDAO.updateAvailability(existing.getRoom().getRoomId(), true);
             }
-
         } catch (SQLException ex) {
             throw new IllegalStateException("Reservation cancellation failed", ex);
         }
     }
 
+    // UML: void
     @Override
     public void deleteReservation(String reservationNo) {
-        if (isBlank(reservationNo)) {
-            throw new IllegalArgumentException("reservationNo is required");
-        }
+        if (isBlank(reservationNo)) throw new IllegalArgumentException("reservationNo is required");
 
         try {
             Reservation existing = reservationDAO.findByReservationNo(reservationNo.trim());
 
-            // Delete allowed only if already CANCELLED
             if (existing.getStatus() != ReservationStatus.CANCELLED) {
                 throw new IllegalArgumentException("Delete allowed only for CANCELLED reservations");
             }
 
             reservationDAO.deleteByReservationNo(existing.getReservationNo());
-
         } catch (SQLException ex) {
             throw new IllegalStateException("Reservation deletion failed", ex);
         }
@@ -202,7 +197,6 @@ public class ReservationServiceImpl implements ReservationService {
 
     private void validateCreateRequest(ReservationRequestDTO req) {
         if (req == null) throw new IllegalArgumentException("Request body is missing");
-
         if (isBlank(req.getFullName())) throw new IllegalArgumentException("fullName is required");
         if (isBlank(req.getAddress())) throw new IllegalArgumentException("address is required");
         if (isBlank(req.getContactNumber())) throw new IllegalArgumentException("contactNumber is required");
