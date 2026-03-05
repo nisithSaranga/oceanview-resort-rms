@@ -33,5 +33,8 @@ public class Invoice {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public Reservation getReservation() { return reservation; }
 
+    public void setIssuedAt(LocalDateTime issuedAt) {
+        this.issuedAt = issuedAt;
+    }
     public void setInvoiceId(int invoiceId) { this.invoiceId = invoiceId; }
 }
