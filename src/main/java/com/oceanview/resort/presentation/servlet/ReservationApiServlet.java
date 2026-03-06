@@ -24,6 +24,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -134,7 +135,23 @@ public class ReservationApiServlet extends HttpServlet {
             writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, fail("reservationNo query param is required"));
             return;
         }
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            ReservationResponseDTO out = new ReservationResponseDTO();
+            out.setMessage("Login required");
+            writeJson(resp, HttpServletResponse.SC_UNAUTHORIZED, out);
+            return;
+        }
 
+        Object roleObj = session.getAttribute("role");
+        String role = roleObj != null ? roleObj.toString() : "";
+
+        if (!"ADMIN".equalsIgnoreCase(role)) {
+            ReservationResponseDTO out = new ReservationResponseDTO();
+            out.setMessage("Admin role required to delete reservations");
+            writeJson(resp, HttpServletResponse.SC_FORBIDDEN, out);
+            return;
+        }
         try {
             reservationController.deleteReservation(reservationNo.trim());
 
