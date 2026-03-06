@@ -440,16 +440,12 @@
          contactNumberInput.setCustomValidity("");
     });
 }
-        const helpBtn = document.getElementById("helpBtn");
-        if (helpBtn) {
-            helpBtn.addEventListener("click", async () => {
-                const result = await request("help", {
-                    method: "GET"
-                });
-                printResult("GET /help", result);
-            });
-        }
-
+           const helpBtn = document.getElementById("helpBtn");
+              if (helpBtn) {
+            helpBtn.addEventListener("click", () => {
+              window.location.href = "help.html";
+         });
+     }
         const logoutBtn = document.getElementById("logoutBtn");
         if (logoutBtn) {
             logoutBtn.addEventListener("click", async () => {
