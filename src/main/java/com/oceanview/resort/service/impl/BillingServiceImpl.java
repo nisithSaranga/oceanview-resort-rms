@@ -31,7 +31,6 @@ public class BillingServiceImpl implements BillingService {
     private final InvoiceDAO invoiceDAO;
     private final InvoiceLineItemDAO invoiceLineItemDAO;
 
-    // UML: strategies: Map<RoomType, PricingStrategy>
     private final Map<RoomType, PricingStrategy> strategies = new EnumMap<>(RoomType.class);
 
     public BillingServiceImpl(ReservationDAO reservationDAO,
@@ -54,15 +53,16 @@ public class BillingServiceImpl implements BillingService {
 
         try {
             // 1) Retrieve reservation
-            Reservation res = reservationDAO.findByReservationNo(resNo);
-            if (res == null) return fail("Reservation not found");
-
-            // Optional guard (not required by UML, but sensible)
+            Reservation res;
+            try {
+                res = reservationDAO.findByReservationNo(resNo);
+            } catch (SQLException ex) {
+                return fail("Reservation not found");
+            }
             if (res.getStatus() == ReservationStatus.CANCELLED) {
                 return fail("Cannot generate invoice for CANCELLED reservation");
             }
 
-            // Prevent duplicates (DB UNIQUE also protects you, but this gives a clean message)
             Optional<Invoice> existingOpt = invoiceDAO.findByReservationNo(resNo);
             if (existingOpt.isPresent()) {
                 Invoice existing = existingOpt.get();

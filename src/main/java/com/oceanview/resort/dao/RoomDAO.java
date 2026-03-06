@@ -4,13 +4,13 @@ import com.oceanview.resort.entity.Room;
 import com.oceanview.resort.enums.RoomType;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface RoomDAO {
 
     Room findById(int id) throws SQLException;
 
-    List<Room> findAvailableByType(RoomType t) throws SQLException;
-
+    List<Room> findAvailableByType(RoomType t, LocalDate checkIn, LocalDate checkOut, String excludeReservationNo) throws SQLException;
     boolean updateAvailability(int roomId, boolean available) throws SQLException;
 }

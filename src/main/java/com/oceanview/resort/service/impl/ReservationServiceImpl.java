@@ -43,7 +43,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         try {
             // 1) Pick an available room by type
-            List<Room> availableRooms = roomDAO.findAvailableByType(req.getRoomType());
+            List<Room> availableRooms = roomDAO.findAvailableByType(req.getRoomType(),req.getCheckIn(),req.getCheckOut(), null);
             if (availableRooms == null || availableRooms.isEmpty()) {
                 return fail("No available rooms for type: " + req.getRoomType());
             }
@@ -71,7 +71,6 @@ public class ReservationServiceImpl implements ReservationService {
 
             // 4) Persist + reserve room
             reservationDAO.save(reservation);
-            roomDAO.updateAvailability(selectedRoom.getRoomId(), false);
 
             // 5) Response
             ReservationResponseDTO out = ReservationMapper.toResponseDTO(reservation);
@@ -119,22 +118,40 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             ReservationStatus newStatus = (req.getStatus() != null) ? req.getStatus() : existing.getStatus();
+
+            RoomType targetType = (req.getRoomType() != null)
+                    ? req.getRoomType()
+                    : (oldRoom != null ? oldRoom.getRoomType() : null);
+
+            if (targetType == null) {
+                return fail("roomType is required");
+            }
+
+            List<Room> candidates = roomDAO.findAvailableByType(
+                    targetType,
+                    newCheckIn,
+                    newCheckOut,
+                    existing.getReservationNo()
+            );
+
+            if (candidates == null || candidates.isEmpty()) {
+                return fail("No available rooms for type: " + targetType);
+            }
+
             Room newRoom = oldRoom;
 
-            // Room relocation logic
-            RoomType requestedType = req.getRoomType();
-            if (requestedType != null && (oldRoom == null || requestedType != oldRoom.getRoomType())) {
-                List<Room> candidates = roomDAO.findAvailableByType(requestedType);
-                if (candidates == null || candidates.isEmpty()) {
-                    return fail("No available rooms for type: " + requestedType);
+            boolean oldRoomStillValid = false;
+            if (oldRoom != null) {
+                for (Room candidate : candidates) {
+                    if (candidate.getRoomId() == oldRoom.getRoomId()) {
+                        oldRoomStillValid = true;
+                        break;
+                    }
                 }
-                newRoom = candidates.get(0);
+            }
 
-                // Release old + reserve new
-                if (oldRoom != null) {
-                    roomDAO.updateAvailability(oldRoom.getRoomId(), true);
-                }
-                roomDAO.updateAvailability(newRoom.getRoomId(), false);
+            if (!oldRoomStillValid) {
+                newRoom = candidates.get(0);
             }
 
             Reservation updated = new Reservation(
@@ -167,9 +184,6 @@ public class ReservationServiceImpl implements ReservationService {
             Reservation existing = reservationDAO.findByReservationNo(reservationNo.trim());
             reservationDAO.updateStatus(existing.getReservationNo(), ReservationStatus.CANCELLED);
 
-            if (existing.getRoom() != null) {
-                roomDAO.updateAvailability(existing.getRoom().getRoomId(), true);
-            }
         } catch (SQLException ex) {
             throw new IllegalStateException("Reservation cancellation failed", ex);
         }

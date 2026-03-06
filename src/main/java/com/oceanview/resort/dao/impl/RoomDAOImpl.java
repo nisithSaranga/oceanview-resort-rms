@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,23 +50,50 @@ public class RoomDAOImpl implements RoomDAO {
     }
 
     @Override
-    public List<Room> findAvailableByType(RoomType t) throws SQLException {
-        if (t == null) {
+    public List<Room> findAvailableByType(RoomType t, LocalDate checkIn, LocalDate checkOut, String excludeReservationNo) throws SQLException {
+        if (t == null || checkIn == null || checkOut == null || !checkOut.isAfter(checkIn)) {
             return Collections.emptyList();
         }
 
-        final String sql =
-                "SELECT room_id, room_number, room_type, base_rate_per_night, available " +
-                        "FROM room " +
-                        "WHERE room_type = ? AND available = ?";
+        StringBuilder sql = new StringBuilder("""
+        SELECT rm.room_id, rm.room_number, rm.room_type, rm.base_rate_per_night, rm.available
+        FROM room rm
+        WHERE rm.room_type = ?
+          AND rm.available = ?
+          AND NOT EXISTS (
+              SELECT 1
+              FROM reservation r
+              WHERE r.room_id = rm.room_id
+                AND r.status <> 'CANCELLED'
+        """);
+
+        if (excludeReservationNo != null && !excludeReservationNo.isBlank()) {
+            sql.append(" AND r.reservation_no <> ? ");
+        }
+
+        sql.append("""
+                AND ? < r.check_out
+                AND ? > r.check_in
+          )
+        ORDER BY rm.room_id
+        """);
 
         List<Room> rooms = new ArrayList<>();
 
         try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             ps.setString(1, t.name());
             ps.setBoolean(2, true);
+
+            int index = 3;
+
+            if (excludeReservationNo != null && !excludeReservationNo.isBlank()) {
+                ps.setString(index++, excludeReservationNo);
+            }
+
+            ps.setDate(index++, java.sql.Date.valueOf(checkIn));
+            ps.setDate(index, java.sql.Date.valueOf(checkOut));
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
