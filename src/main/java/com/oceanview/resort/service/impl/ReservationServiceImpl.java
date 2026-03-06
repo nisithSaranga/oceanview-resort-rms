@@ -113,6 +113,10 @@ public class ReservationServiceImpl implements ReservationService {
 
             LocalDate newCheckIn = (req.getCheckIn() != null) ? req.getCheckIn() : existing.getCheckIn();
             LocalDate newCheckOut = (req.getCheckOut() != null) ? req.getCheckOut() : existing.getCheckOut();
+
+            if (newCheckIn.isBefore(LocalDate.now())) {
+                return fail("checkIn cannot be in the past");
+            }
             if (newCheckIn == null || newCheckOut == null || !newCheckOut.isAfter(newCheckIn)) {
                 return fail("checkOut must be after checkIn");
             }
@@ -218,6 +222,9 @@ public class ReservationServiceImpl implements ReservationService {
 
         if (req.getCheckIn() == null || req.getCheckOut() == null) {
             throw new IllegalArgumentException("checkIn and checkOut are required");
+        }
+        if (req.getCheckIn().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("checkIn cannot be in the past");
         }
         if (!req.getCheckOut().isAfter(req.getCheckIn())) {
             throw new IllegalArgumentException("checkOut must be after checkIn");
