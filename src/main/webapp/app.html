@@ -5,13 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OceanView RMS - Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(180deg, #eef7fb 0%, #f8f9fa 100%);
+        }
+
+        .ocean-navbar {
+            background: linear-gradient(90deg, #0b3c5d 0%, #145374 45%, #1b6b85 100%);
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #5ee7df 0%, #2f80ed 100%);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 8px 20px rgba(47, 128, 237, 0.25);
+        }
+
+        .hero-card {
+            border: 0;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #0b3c5d 0%, #145374 55%, #1b6b85 100%);
+            color: white;
+            box-shadow: 0 16px 40px rgba(11, 60, 93, 0.18);
+        }
+
+        .section-card {
+            border: 0;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-card .card-header {
+            border-bottom: 0;
+            padding: 0.95rem 1.2rem;
+            font-size: 1rem;
+        }
+
+        .section-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .soft-header {
+            background: linear-gradient(90deg, #f5fbff 0%, #edf7fb 100%);
+            color: #0b3c5d;
+        }
+
+        .output-panel {
+            min-height: 320px;
+            max-height: 420px;
+            overflow: auto;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 14px;
+            font-size: 0.92rem;
+        }
+
+        .role-badge {
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            background: rgba(255, 255, 255, 0.16);
+            color: white;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .delete-disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .muted-note {
+            font-size: 0.88rem;
+            color: #6c757d;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">OceanView RMS</span>
-        <div class="d-flex gap-2">
+<nav class="navbar navbar-dark ocean-navbar shadow-sm">
+    <div class="container-fluid px-3 px-md-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="brand-mark">OR</div>
+            <div>
+                <div class="navbar-brand mb-0 h4 fw-semibold">OceanView Resort RMS</div>
+                <div class="text-white-50 small">Reservation, billing and staff operations</div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span class="role-badge" id="roleBadge">User</span>
             <button class="btn btn-outline-light btn-sm" id="helpBtn">Help</button>
             <button class="btn btn-danger btn-sm" id="logoutBtn">Logout</button>
         </div>
@@ -19,12 +108,28 @@
 </nav>
 
 <div class="container py-4">
-    <div class="row g-4">
+    <div class="card hero-card mb-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-8">
+                    <h1 class="h3 mb-2">OceanView Resort Reservation Management System</h1>
+                    <p class="mb-0 text-white-50">
+                        Manage reservations, room changes, cancellations, billing, and staff operations from one dashboard.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <div class="small text-white-50">Current Workspace</div>
+                    <div class="fs-5 fw-semibold">Reservations & Billing Dashboard</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="row g-4">
         <!-- Create Reservation -->
         <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header fw-semibold">Create Reservation</div>
+            <div class="card section-card">
+                <div class="card-header soft-header fw-semibold">Create Reservation</div>
                 <div class="card-body">
                     <form id="createReservationForm">
                         <div class="mb-2">
@@ -69,8 +174,8 @@
 
         <!-- Reservation Actions -->
         <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header fw-semibold">Reservation Actions</div>
+            <div class="card section-card">
+                <div class="card-header soft-header fw-semibold">Reservation Actions</div>
                 <div class="card-body">
                     <div class="mb-2">
                         <label class="form-label">Reservation No</label>
@@ -97,14 +202,17 @@
                         <button class="btn btn-warning" id="cancelBtn" type="button">Cancel Reservation</button>
                         <button class="btn btn-danger" id="deleteBtn" type="button">Delete Reservation</button>
                     </div>
+                    <div class="mt-2 muted-note">
+                        Only administrators can delete cancelled reservations.
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Billing -->
         <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header fw-semibold">Billing</div>
+            <div class="card section-card">
+                <div class="card-header soft-header fw-semibold">Billing</div>
                 <div class="card-body">
                     <div class="mb-2">
                         <label class="form-label">Reservation No</label>
@@ -121,11 +229,10 @@
 
         <!-- Output -->
         <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header fw-semibold">Response Output</div>
+            <div class="card section-card">
+                <div class="card-header soft-header fw-semibold">Response Output</div>
                 <div class="card-body">
-                    <pre id="output" class="bg-dark text-light p-3 rounded mb-0" style="min-height: 320px; white-space: pre-wrap;"></pre>
-                </div>
+                    <pre id="output" class="output-panel p-3 mb-0" style="white-space: pre-wrap;"></pre>                </div>
             </div>
         </div>
 
@@ -152,6 +259,19 @@
         const addressInput = document.getElementById("address");
         const contactNumberInput = document.getElementById("contactNumber");
 
+        const roleBadge = document.getElementById("roleBadge");
+        const deleteBtn = document.getElementById("deleteBtn");
+        const currentRole = (sessionStorage.getItem("role") || "").toUpperCase();
+
+       if (roleBadge) {
+         roleBadge.textContent = currentRole ? currentRole : "USER";
+         }
+
+if (deleteBtn && currentRole !== "ADMIN") {
+    deleteBtn.disabled = true;
+    deleteBtn.classList.add("delete-disabled");
+    deleteBtn.title = "Only admins can delete cancelled reservations";
+}
         function printResult(title, data) {
             if (!output) return;
             output.textContent = title + "\n\n" + JSON.stringify(data, null, 2);
@@ -170,7 +290,7 @@
         return false;
     }
      if (!fullNamePattern.test(fullName)) {
-        fullNameInput.setCustomValidity("Full name must contain letters ");
+        fullNameInput.setCustomValidity("Full name must contain letters & spaces only");
         createReservationForm.reportValidity();
         return false;
     }
@@ -314,7 +434,7 @@
 
     const fullNamePattern = /^[A-Za-z\s]{2,100}$/;
     const addressPattern = /^(?=.*[A-Za-z])[A-Za-z0-9\s,./#'-]{5,200}$/;
-    const contactPattern = /^\+?\d{7,15}$/;
+    const contactPattern = /^\+?\d{10,15}$/;
 
     if (!fullName) {
         fullNameInput.setCustomValidity("Full name is required.");
@@ -457,10 +577,11 @@
                 printResult("POST /logout", result);
 
                 if (result.ok) {
-                    setTimeout(() => {
-                        window.location.href = "index.html";
-                    }, 500);
-                }
+                sessionStorage.removeItem("role");
+                setTimeout(() => {
+                window.location.href = "index.html";
+                }, 500);
+              }
             });
         }
 
@@ -594,7 +715,6 @@
             });
         }
 
-        const deleteBtn = document.getElementById("deleteBtn");
         if (deleteBtn) {
             deleteBtn.addEventListener("click", async () => {
                 const reservationNoInput = document.getElementById("reservationNo");
