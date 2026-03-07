@@ -85,6 +85,100 @@
             font-size: 0.88rem;
             color: #6c757d;
         }
+        .bill-summary-card {
+    background: #f8fbff;
+    border: 1px solid #dbeaf3;
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.bill-summary-title {
+    color: #0b3c5d;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+}
+
+.bill-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+}
+
+.bill-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+    margin-bottom: 0.2rem;
+}
+
+.bill-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0b3c5d;
+}
+
+.bill-message {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background: #eef7fb;
+    color: #145374;
+    border-radius: 12px;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 576px) {
+    .bill-grid {
+        grid-template-columns: 1fr;
+    }
+}
+        .bill-summary-card {
+    background: #f8fbff;
+    border: 1px solid #dbeaf3;
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.bill-summary-title {
+    color: #0b3c5d;
+    font-weight: 700;
+    margin-bottom: 0.9rem;
+}
+
+.bill-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+}
+
+.bill-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6c757d;
+    margin-bottom: 0.2rem;
+}
+
+.bill-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0b3c5d;
+}
+
+.bill-message {
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    background: #eef7fb;
+    color: #145374;
+    border-radius: 12px;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 576px) {
+    .bill-grid {
+        grid-template-columns: 1fr;
+    }
+  }
     </style>
 </head>
 <body class="bg-light">
@@ -220,9 +314,12 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button class="btn btn-success" id="generateInvoiceBtn" type="button">Generate Invoice</button>
-                        <button class="btn btn-outline-success" id="getInvoiceBtn" type="button">Get Invoice</button>
+                        <button class="btn btn-success" id="generateInvoiceBtn" type="button">Generate / View Bill</button>
+                        <button class="btn btn-outline-success" id="getInvoiceBtn" type="button">Load Existing Bill</button>
+                        <button class="btn btn-success" id="printBillBtn" type="button" disabled>Print Bill</button>
                     </div>
+
+                    <div id="billSummary" class="bill-summary-card d-none mt-3"></div>
                 </div>
             </div>
         </div>
@@ -258,97 +355,113 @@
         const fullNameInput = document.getElementById("fullName");
         const addressInput = document.getElementById("address");
         const contactNumberInput = document.getElementById("contactNumber");
+        const billingReservationNoInput = document.getElementById("billingReservationNo");
+        const billSummary = document.getElementById("billSummary");
+        const printBillBtn = document.getElementById("printBillBtn");
+
+        let latestBillData = null;
 
         const roleBadge = document.getElementById("roleBadge");
         const deleteBtn = document.getElementById("deleteBtn");
         const currentRole = (sessionStorage.getItem("role") || "").toUpperCase();
 
-       if (roleBadge) {
-         roleBadge.textContent = currentRole ? currentRole : "USER";
-         }
+        if (roleBadge) {
+            roleBadge.textContent = currentRole ? currentRole : "USER";
+        }
 
-if (deleteBtn && currentRole !== "ADMIN") {
-    deleteBtn.disabled = true;
-    deleteBtn.classList.add("delete-disabled");
-    deleteBtn.title = "Only admins can delete cancelled reservations";
-}
+        if (deleteBtn && currentRole !== "ADMIN") {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add("delete-disabled");
+            deleteBtn.title = "Only admins can delete cancelled reservations";
+        }
+
         function printResult(title, data) {
             if (!output) return;
             output.textContent = title + "\n\n" + JSON.stringify(data, null, 2);
         }
 
         function validateFullName() {
-    if (!createReservationForm || !fullNameInput) return true;
+            if (!createReservationForm || !fullNameInput) return true;
 
-    fullNameInput.setCustomValidity("");
+            fullNameInput.setCustomValidity("");
 
-    const fullName = fullNameInput.value.trim();
-    const fullNamePattern = /^[A-Za-z\s]{2,100}$/;
-    if (!fullName) {
-        fullNameInput.setCustomValidity("Full name is required.");
-        createReservationForm.reportValidity();
-        return false;
-    }
-     if (!fullNamePattern.test(fullName)) {
-        fullNameInput.setCustomValidity("Full name must contain letters & spaces only");
-        createReservationForm.reportValidity();
-        return false;
-    }
-    return true;
-}
-     function validateAddress() {
-    if (!createReservationForm || !addressInput) return true;
+            const fullName = fullNameInput.value.trim();
+            const fullNamePattern = /^[A-Za-z\s]{2,100}$/;
 
-    addressInput.setCustomValidity("");
+            if (!fullName) {
+                fullNameInput.setCustomValidity("Full name is required.");
+                createReservationForm.reportValidity();
+                return false;
+            }
 
-    const address = addressInput.value.trim();
-    const addressPattern = /^(?=.*[A-Za-z])[A-Za-z0-9\s,./#'-]{5,200}$/;
+            if (!fullNamePattern.test(fullName)) {
+                fullNameInput.setCustomValidity("Full name must contain letters and spaces only.");
+                createReservationForm.reportValidity();
+                return false;
+            }
 
-    if (!address) {
-        addressInput.setCustomValidity("Address is required.");
-        createReservationForm.reportValidity();
-        return false;
-    }
+            return true;
+        }
 
-    if (!addressPattern.test(address)) {
-        addressInput.setCustomValidity("Address must contain letters and may include digits,symbols");
-        createReservationForm.reportValidity();
-        return false;
-    }
+        function validateAddress() {
+            if (!createReservationForm || !addressInput) return true;
 
-    return true;
-}
-    function validateContactNumber() {
-    if (!createReservationForm || !contactNumberInput) return true;
+            addressInput.setCustomValidity("");
 
-    contactNumberInput.setCustomValidity("");
+            const address = addressInput.value.trim();
+            const addressPattern = /^(?=.*[A-Za-z])[A-Za-z0-9\s,./#'-]{5,200}$/;
 
-    const contactRaw = contactNumberInput.value.trim();
-    const contactNormalized = normalizeContactNumber(contactRaw);
-    const contactPattern = /^\+?\d{10,15}$/;
+            if (!address) {
+                addressInput.setCustomValidity("Address is required.");
+                createReservationForm.reportValidity();
+                return false;
+            }
 
-    if (!contactRaw) {
-        contactNumberInput.setCustomValidity("Contact number is required.");
-        createReservationForm.reportValidity();
-        return false;
-    }
+            if (!addressPattern.test(address)) {
+                addressInput.setCustomValidity("Address must contain letters and may include digits and symbols.");
+                createReservationForm.reportValidity();
+                return false;
+            }
 
-    if (!contactPattern.test(contactNormalized)) {
-        contactNumberInput.setCustomValidity("Contact Number must contain 10-15 digits");
-        createReservationForm.reportValidity();
-        return false;
-    }
+            return true;
+        }
 
-    contactNumberInput.value = contactNormalized;
-    return true;
-     }
+        function normalizeContactNumber(value) {
+            return value.trim().replace(/[\s()-]/g, "");
+        }
 
-    function formatDateLocal(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-}
+        function validateContactNumber() {
+            if (!createReservationForm || !contactNumberInput) return true;
+
+            contactNumberInput.setCustomValidity("");
+
+            const contactRaw = contactNumberInput.value.trim();
+            const contactNormalized = normalizeContactNumber(contactRaw);
+            const contactPattern = /^\+?\d{10,15}$/;
+
+            if (!contactRaw) {
+                contactNumberInput.setCustomValidity("Contact number is required.");
+                createReservationForm.reportValidity();
+                return false;
+            }
+
+            if (!contactPattern.test(contactNormalized)) {
+                contactNumberInput.setCustomValidity("Contact number must contain 10 to 15 digits.");
+                createReservationForm.reportValidity();
+                return false;
+            }
+
+            contactNumberInput.value = contactNormalized;
+            return true;
+        }
+
+        function formatDateLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
+
         function addDays(dateString, days) {
             const date = new Date(dateString + "T00:00:00");
             date.setDate(date.getDate() + days);
@@ -415,75 +528,10 @@ if (deleteBtn && currentRole !== "ADMIN") {
                 checkOutInput.setCustomValidity("");
                 return false;
             }
+
             return true;
-         }
-          function normalizeContactNumber(value) {
-           return value.trim().replace(/[\s()-]/g, "");
-                  }
-        function validateCreateReservationTextFields() {
-           if (!createReservationForm) return true;
+        }
 
-           if (fullNameInput) fullNameInput.setCustomValidity("");
-           if (addressInput) addressInput.setCustomValidity("");
-           if (contactNumberInput) contactNumberInput.setCustomValidity("");
-
-    const fullName = fullNameInput ? fullNameInput.value.trim() : "";
-    const address = addressInput ? addressInput.value.trim() : "";
-    const contactRaw = contactNumberInput ? contactNumberInput.value.trim() : "";
-    const contactNormalized = normalizeContactNumber(contactRaw);
-
-    const fullNamePattern = /^[A-Za-z\s]{2,100}$/;
-    const addressPattern = /^(?=.*[A-Za-z])[A-Za-z0-9\s,./#'-]{5,200}$/;
-    const contactPattern = /^\+?\d{10,15}$/;
-
-    if (!fullName) {
-        fullNameInput.setCustomValidity("Full name is required.");
-        createReservationForm.reportValidity();
-        fullNameInput.setCustomValidity("");
-        return false;
-    }
-
-    if (!fullNamePattern.test(fullName)) {
-        fullNameInput.setCustomValidity("Full name must contain letters only");
-        createReservationForm.reportValidity();
-        fullNameInput.setCustomValidity("");
-        return false;
-    }
-
-    if (!address) {
-        addressInput.setCustomValidity("Address is required.");
-        createReservationForm.reportValidity();
-        addressInput.setCustomValidity("");
-        return false;
-    }
-
-    if (!addressPattern.test(address)) {
-        addressInput.setCustomValidity("Address must contain letters and may include digits,symbols");
-        createReservationForm.reportValidity();
-        addressInput.setCustomValidity("");
-        return false;
-    }
-
-    if (!contactRaw) {
-        contactNumberInput.setCustomValidity("Contact Number is required.");
-        createReservationForm.reportValidity();
-        contactNumberInput.setCustomValidity("");
-        return false;
-    }
-
-    if (!contactPattern.test(contactNormalized)) {
-        contactNumberInput.setCustomValidity("Contact Number must contain 10-15 digits");
-        createReservationForm.reportValidity();
-        contactNumberInput.setCustomValidity("");
-        return false;
-    }
-
-    if (contactNumberInput) {
-        contactNumberInput.value = contactNormalized;
-    }
-
-    return true;
-     }
         async function request(url, options = {}) {
             const defaultOptions = {
                 credentials: "same-origin"
@@ -515,252 +563,423 @@ if (deleteBtn && currentRole !== "ADMIN") {
         }
 
         function syncReservationNo(reservationNo) {
-            if (reservationNo) {
-                const reservationNoInput = document.getElementById("reservationNo");
-                const billingReservationNoInput = document.getElementById("billingReservationNo");
+            if (!reservationNo) return;
 
-                if (reservationNoInput) {
-                    reservationNoInput.value = reservationNo;
-                }
+            const reservationNoInput = document.getElementById("reservationNo");
+            const billingReservationNoField = document.getElementById("billingReservationNo");
 
-                if (billingReservationNoInput) {
-                    billingReservationNoInput.value = reservationNo;
-                }
+            if (reservationNoInput) {
+                reservationNoInput.value = reservationNo;
+            }
+
+            if (billingReservationNoField) {
+                billingReservationNoField.value = reservationNo;
             }
         }
 
-        applyCreateReservationDateLimits();
-
-        if (checkInInput) {
-            checkInInput.addEventListener("change", () => {
-                applyCreateReservationDateLimits();
-                checkInInput.setCustomValidity("");
-            });
+        function formatAmount(value) {
+            const amount = Number(value);
+            return Number.isFinite(amount) ? amount.toFixed(2) : "0.00";
         }
 
-        if (checkOutInput) {
-            checkOutInput.addEventListener("change", () => {
-                checkOutInput.setCustomValidity("");
-            });
+        function renderMinimalBillSummary(billData) {
+            if (!billSummary || !billData) return;
+
+            latestBillData = billData;
+            billSummary.classList.remove("d-none");
+        billSummary.innerHTML = `
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">Bill Summary</h5>
+                    <p class="mb-2"><strong>Invoice ID:</strong> ${billData.invoiceId ?? "—"}</p>
+                    <p class="mb-2"><strong>Reservation No:</strong> ${billData.reservationNo ?? "—"}</p>
+                    <p class="mb-2"><strong>Total Amount:</strong> LKR ${formatAmount(billData.totalAmount)}</p>
+                    <p class="mb-0 text-muted">${billData.message || "Billing details loaded."}</p>
+                </div>
+            </div>
+        `;
+
+        if (printBillBtn) {
+            printBillBtn.disabled = false;
         }
-        if (fullNameInput) {
-        fullNameInput.addEventListener("input", () => {
-        fullNameInput.setCustomValidity("");
-    });
-}
+    }
 
-        if (addressInput) {
-        addressInput.addEventListener("input", () => {
-         addressInput.setCustomValidity("");
-    });
-}
+    async function loadBillPreview(method) {
+        const reservationNo = billingReservationNoInput
+            ? billingReservationNoInput.value.trim()
+            : "";
 
-        if (contactNumberInput) {
-        contactNumberInput.addEventListener("input", () => {
-         contactNumberInput.setCustomValidity("");
-    });
-}
-           const helpBtn = document.getElementById("helpBtn");
-              if (helpBtn) {
-            helpBtn.addEventListener("click", () => {
-              window.location.href = "help.html";
-         });
-     }
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) {
-            logoutBtn.addEventListener("click", async () => {
-                const result = await request("logout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({})
-                });
-                printResult("POST /logout", result);
-
-                if (result.ok) {
-                sessionStorage.removeItem("role");
-                setTimeout(() => {
-                window.location.href = "index.html";
-                }, 500);
-              }
+        if (!reservationNo) {
+            printResult("CLIENT VALIDATION", {
+                message: "Enter a reservation number before loading billing details."
             });
-        }
-
-        if (createReservationForm) {
-    createReservationForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        try {
-            applyCreateReservationDateLimits();
-
-            if (!createReservationForm.reportValidity()) {
-                return;
-            }
-                  if (!validateFullName()) {
-                   printResult("CLIENT VALIDATION", {
-                     message:fullNameInput.validationMessage
-                    });
-               return;
-                    }
-                  if (!validateAddress()) {
-                  printResult("CLIENT VALIDATION", {
-                    message:addressInput.validationMessage
-                    });
-
-               return;
-               }
-               if (!validateContactNumber()) {
-                  printResult("CLIENT VALIDATION", {
-                    message:contactNumberInput.validationMessage
-                    });
             return;
-               }
+        }
 
-    // Temporarily keep only the date validation in the path
-            if (typeof validateCreateReservationDates === "function") {
-                if (!validateCreateReservationDates()) {
-                    return;
-                }
-            } else {
-                printResult("CREATE RESERVATION JS ERROR", {
-                    message: "validateCreateReservationDates is not defined"
-                });
-                return;
-            }
+        let result;
 
-            const payload = {
-                fullName: document.getElementById("fullName").value.trim(),
-                address: document.getElementById("address").value.trim(),
-                contactNumber: normalizeContactNumber(document.getElementById("contactNumber").value),
-                 roomType: document.getElementById("roomType").value,
-                checkIn: document.getElementById("checkIn").value,
-                checkOut: document.getElementById("checkOut").value
-            };
-
-            const result = await request("reservations", {
+        if (method === "POST") {
+            result = await request("billing", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ reservationNo: reservationNo })
             });
+        } else {
+            result = await request(
+                "billing?reservationNo=" + encodeURIComponent(reservationNo),
+                { method: "GET" }
+            );
+        }
 
-            if (result.data && result.data.reservationNo) {
-                syncReservationNo(result.data.reservationNo);
+        if (result.ok && result.data) {
+            renderMinimalBillSummary(result.data);
+        } else {
+            latestBillData = null;
+
+            if (billSummary) {
+                billSummary.classList.add("d-none");
+                billSummary.innerHTML = "";
             }
 
-            printResult("POST /reservations", result);
-
-        } catch (err) {
-            printResult("CREATE RESERVATION JS ERROR", {
-                message: err.message,
-                stack: err.stack
-            });
+            if (printBillBtn) {
+                printBillBtn.disabled = true;
+            }
         }
-    });
-}
-        const getReservationBtn = document.getElementById("getReservationBtn");
-        if (getReservationBtn) {
-            getReservationBtn.addEventListener("click", async () => {
-                const reservationNoInput = document.getElementById("reservationNo");
-                const reservationNo = reservationNoInput ? reservationNoInput.value.trim() : "";
 
-                const result = await request("reservations?reservationNo=" + encodeURIComponent(reservationNo), {
-                    method: "GET"
+        printResult(method === "POST" ? "POST /billing" : "GET /billing", result);
+    }
+
+    function printCurrentBill() {
+        if (!latestBillData) {
+            printResult("CLIENT VALIDATION", {
+                message: "Generate or load a bill before printing."
+            });
+            return;
+        }
+
+        const bill = latestBillData;
+
+        const printWindow = window.open("", "_blank", "width=900,height=700");
+
+        if (!printWindow) {
+            printResult("PRINT", {
+                message: "Popup blocked. Allow popups to print the bill."
+            });
+            return;
+        }
+
+        const printableHtml = `
+            <!doctype html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>OceanView Resort Bill</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 40px;
+                        color: #1f2937;
+                    }
+                    h1 {
+                        margin-bottom: 8px;
+                        color: #0b3c5d;
+                    }
+                    .sub {
+                        color: #6b7280;
+                        margin-bottom: 24px;
+                    }
+                    .bill-box {
+                        border: 1px solid #d1d5db;
+                        border-radius: 12px;
+                        padding: 24px;
+                    }
+                    .row {
+                        margin-bottom: 14px;
+                    }
+                    .label {
+                        font-size: 12px;
+                        text-transform: uppercase;
+                        color: #6b7280;
+                        margin-bottom: 4px;
+                    }
+                    .value {
+                        font-size: 18px;
+                        font-weight: 600;
+                    }
+                    .total {
+                        margin-top: 24px;
+                        padding-top: 16px;
+                        border-top: 1px solid #e5e7eb;
+                        font-size: 22px;
+                        font-weight: 700;
+                        color: #0b3c5d;
+                    }
+                    .note {
+                        margin-top: 20px;
+                        font-size: 14px;
+                        color: #4b5563;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>OceanView Resort RMS</h1>
+                <div class="sub">Reservation Billing Summary</div>
+
+                <div class="bill-box">
+                    <div class="row">
+                        <div class="label">Invoice ID</div>
+                        <div class="value">${bill.invoiceId ?? "—"}</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="label">Reservation No</div>
+                        <div class="value">${bill.reservationNo ?? "—"}</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="label">Status</div>
+                        <div class="value">${bill.message || "Invoice loaded"}</div>
+                    </div>
+
+                    <div class="total">Total Amount: LKR ${formatAmount(bill.totalAmount)}</div>
+                    <div class="note">Printed from OceanView Resort Reservation Management System.</div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(printableHtml);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+    }
+
+    applyCreateReservationDateLimits();
+
+    if (checkInInput) {
+        checkInInput.addEventListener("change", () => {
+            applyCreateReservationDateLimits();
+            checkInInput.setCustomValidity("");
+        });
+    }
+
+    if (checkOutInput) {
+        checkOutInput.addEventListener("change", () => {
+            checkOutInput.setCustomValidity("");
+        });
+    }
+
+    if (fullNameInput) {
+        fullNameInput.addEventListener("input", () => {
+            fullNameInput.setCustomValidity("");
+        });
+    }
+
+    if (addressInput) {
+        addressInput.addEventListener("input", () => {
+            addressInput.setCustomValidity("");
+        });
+    }
+
+    if (contactNumberInput) {
+        contactNumberInput.addEventListener("input", () => {
+            contactNumberInput.setCustomValidity("");
+        });
+    }
+
+    const helpBtn = document.getElementById("helpBtn");
+    if (helpBtn) {
+        helpBtn.addEventListener("click", () => {
+            window.location.href = "help.html";
+        });
+    }
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+            const result = await request("logout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({})
+            });
+
+            printResult("POST /logout", result);
+
+            if (result.ok) {
+                sessionStorage.removeItem("role");
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 500);
+            }
+        });
+    }
+
+    if (createReservationForm) {
+        createReservationForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            try {
+                applyCreateReservationDateLimits();
+
+                if (!createReservationForm.reportValidity()) {
+                    return;
+                }
+
+                if (!validateFullName()) {
+                    printResult("CLIENT VALIDATION", {
+                        message: fullNameInput.validationMessage
+                    });
+                    return;
+                }
+
+                if (!validateAddress()) {
+                    printResult("CLIENT VALIDATION", {
+                        message: addressInput.validationMessage
+                    });
+                    return;
+                }
+
+                if (!validateContactNumber()) {
+                    printResult("CLIENT VALIDATION", {
+                        message: contactNumberInput.validationMessage
+                    });
+                    return;
+                }
+
+                if (typeof validateCreateReservationDates === "function") {
+                    if (!validateCreateReservationDates()) {
+                        return;
+                    }
+                } else {
+                    printResult("CREATE RESERVATION JS ERROR", {
+                        message: "validateCreateReservationDates is not defined"
+                    });
+                    return;
+                }
+
+                const payload = {
+                    fullName: document.getElementById("fullName").value.trim(),
+                    address: document.getElementById("address").value.trim(),
+                    contactNumber: normalizeContactNumber(document.getElementById("contactNumber").value),
+                    roomType: document.getElementById("roomType").value,
+                    checkIn: document.getElementById("checkIn").value,
+                    checkOut: document.getElementById("checkOut").value
+                };
+
+                const result = await request("reservations", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
                 });
 
                 if (result.data && result.data.reservationNo) {
                     syncReservationNo(result.data.reservationNo);
                 }
 
-                printResult("GET /reservations", result);
-            });
-        }
+                printResult("POST /reservations", result);
 
-        const relocateBtn = document.getElementById("relocateBtn");
-        if (relocateBtn) {
-            relocateBtn.addEventListener("click", async () => {
-                const reservationNoInput = document.getElementById("reservationNo");
-                const updateRoomTypeInput = document.getElementById("updateRoomType");
-
-                const payload = {
-                    reservationNo: reservationNoInput ? reservationNoInput.value.trim() : "",
-                    roomType: updateRoomTypeInput ? updateRoomTypeInput.value : ""
-                };
-
-                const result = await request("reservations", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+            } catch (err) {
+                printResult("CREATE RESERVATION JS ERROR", {
+                    message: err.message,
+                    stack: err.stack
                 });
+            }
+        });
+    }
 
-                printResult("PUT /reservations (relocate)", result);
+    const getReservationBtn = document.getElementById("getReservationBtn");
+    if (getReservationBtn) {
+        getReservationBtn.addEventListener("click", async () => {
+            const reservationNoInput = document.getElementById("reservationNo");
+            const reservationNo = reservationNoInput ? reservationNoInput.value.trim() : "";
+
+            const result = await request("reservations?reservationNo=" + encodeURIComponent(reservationNo), {
+                method: "GET"
             });
-        }
 
-        const cancelBtn = document.getElementById("cancelBtn");
-        if (cancelBtn) {
-            cancelBtn.addEventListener("click", async () => {
-                const reservationNoInput = document.getElementById("reservationNo");
+            if (result.data && result.data.reservationNo) {
+                syncReservationNo(result.data.reservationNo);
+            }
 
-                const payload = {
-                    reservationNo: reservationNoInput ? reservationNoInput.value.trim() : "",
-                    status: "CANCELLED"
-                };
+            printResult("GET /reservations", result);
+        });
+    }
 
-                const result = await request("reservations", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+    const relocateBtn = document.getElementById("relocateBtn");
+    if (relocateBtn) {
+        relocateBtn.addEventListener("click", async () => {
+            const reservationNoInput = document.getElementById("reservationNo");
+            const updateRoomTypeInput = document.getElementById("updateRoomType");
 
-                printResult("PUT /reservations (cancel)", result);
+            const payload = {
+                reservationNo: reservationNoInput ? reservationNoInput.value.trim() : "",
+                roomType: updateRoomTypeInput ? updateRoomTypeInput.value : ""
+            };
+
+            const result = await request("reservations", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
-        }
 
-        if (deleteBtn) {
-            deleteBtn.addEventListener("click", async () => {
-                const reservationNoInput = document.getElementById("reservationNo");
-                const reservationNo = reservationNoInput ? reservationNoInput.value.trim() : "";
+            printResult("PUT /reservations (relocate)", result);
+        });
+    }
 
-                const result = await request("reservations?reservationNo=" + encodeURIComponent(reservationNo), {
-                    method: "DELETE"
-                });
+    const cancelBtn = document.getElementById("cancelBtn");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", async () => {
+            const reservationNoInput = document.getElementById("reservationNo");
 
-                printResult("DELETE /reservations", result);
+            const payload = {
+                reservationNo: reservationNoInput ? reservationNoInput.value.trim() : "",
+                status: "CANCELLED"
+            };
+
+            const result = await request("reservations", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
-        }
 
-        const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
-        if (generateInvoiceBtn) {
-            generateInvoiceBtn.addEventListener("click", async () => {
-                const billingReservationNoInput = document.getElementById("billingReservationNo");
+            printResult("PUT /reservations (cancel)", result);
+        });
+    }
 
-                const payload = {
-                    reservationNo: billingReservationNoInput ? billingReservationNoInput.value.trim() : ""
-                };
+    if (deleteBtn) {
+        deleteBtn.addEventListener("click", async () => {
+            const reservationNoInput = document.getElementById("reservationNo");
+            const reservationNo = reservationNoInput ? reservationNoInput.value.trim() : "";
 
-                const result = await request("billing", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                printResult("POST /billing", result);
+            const result = await request("reservations?reservationNo=" + encodeURIComponent(reservationNo), {
+                method: "DELETE"
             });
-        }
 
-        const getInvoiceBtn = document.getElementById("getInvoiceBtn");
-        if (getInvoiceBtn) {
-            getInvoiceBtn.addEventListener("click", async () => {
-                const billingReservationNoInput = document.getElementById("billingReservationNo");
-                const reservationNo = billingReservationNoInput ? billingReservationNoInput.value.trim() : "";
+            printResult("DELETE /reservations", result);
+        });
+    }
 
-                const result = await request("billing?reservationNo=" + encodeURIComponent(reservationNo), {
-                    method: "GET"
-                });
+    const generateInvoiceBtn = document.getElementById("generateInvoiceBtn");
+    if (generateInvoiceBtn) {
+        generateInvoiceBtn.addEventListener("click", async () => {
+            await loadBillPreview("POST");
+        });
+    }
 
-                printResult("GET /billing", result);
-            });
-        }
-    });
-</script>
-</body>
-</html>
+    const getInvoiceBtn = document.getElementById("getInvoiceBtn");
+    if (getInvoiceBtn) {
+        getInvoiceBtn.addEventListener("click", async () => {
+            await loadBillPreview("GET");
+        });
+    }
+
+    if (printBillBtn) {
+        printBillBtn.addEventListener("click", () => {
+            printCurrentBill();
+        });
+    }
+});
+   </script>
+    </body>
+    </html>
