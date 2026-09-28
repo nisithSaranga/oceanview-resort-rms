@@ -10,7 +10,6 @@ Scope is internal staff/admin usage (not a guest self-service portal).
 * Maven (WAR packaging)
 * MySQL
 * Jackson (JSON)
-* JUnit 5 (tests)
 
 #### Build & Deploy
 
