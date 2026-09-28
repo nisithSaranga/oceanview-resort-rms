@@ -1,121 +1,130 @@
-# OceanView Resort Reservation Management System (CIS6003)
+# OceanView Resort Reservation Management System
 
-A Java EE (Servlet-based) web application for managing resort reservations, preventing booking conflicts, and generating invoices.
-Scope is internal staff/admin usage (not a guest self-service portal).
+![Java 17](https://img.shields.io/badge/Java-17-orange)
+![Tomcat 9](https://img.shields.io/badge/Tomcat-9-yellow)
+![Maven](https://img.shields.io/badge/Build-Maven-blue)
+![MySQL](https://img.shields.io/badge/Database-MySQL-informational)
 
-### Tech Stack:
+A Java EE (Servlet-based) web application for managing resort reservations, preventing booking conflicts, and generating invoices. Built for **CIS6003** as an internal tool for resort staff and administrators (not a guest self-service portal).
 
-* Java (JDK 17)
-* Tomcat 9 (Servlet javax.\*)
-* Maven (WAR packaging)
-* MySQL
-* Jackson (JSON)
+## Features
 
-#### Build & Deploy
+- **Double-booking prevention:** reservation requests are checked for conflicts before they are accepted.
+- **Full reservation lifecycle:** create, look up, update, relocate, and cancel reservations.
+- **Invoicing:** generate an invoice for a reservation and fetch it again later.
+- **Room-type pricing:** pricing is calculated through interchangeable `PricingStrategy` implementations.
+- **Staff authentication:** login and logout endpoints for internal users.
+- **JSON API:** every operation is exposed as a JSON endpoint over HTTP.
+- **Self-describing service:** `GET /help` returns a health check and the list of available routes.
+- **Ready-to-run smoke tests:** copy-paste HTTP commands for auth, reservations, and billing in `tools/http/`.
+- **Safe configuration:** database credentials live in a local, Git-ignored file. Only a template is committed.
 
-* Build the WAR
-```
-mvn clean package
-```
-* Deploy to Tomcat:
-```
-Copy: target/oceanview-resort-rms.war
-To: <TOMCAT_HOME>/webapps/
-```
-* Start Tomcat:
-```
-Run: <TOMCAT_HOME>/bin/startup.bat
-```
-* Base URL:
-```
-http://localhost:8080/oceanview-resort-rms/
-```
-#### Data Access (DAO + Factory + DBConnectionManager)
+<!-- Add screenshots from docs/screenshots here, for example:
+![Reservation flow](docs/screenshots/your-file-name.png)
+-->
 
-This project uses a simple 3-tier layered architecture:
+## Architecture
 
-- Presentation: Servlets (HTTP/JSON)
-- Business: Controllers + Services (use case orchestration)
-- Persistence: DAO interfaces + JDBC DAO implementations
+A 3-tier layered design. Services depend only on DAO interfaces, never on JDBC classes.
 
-**Key packages**
-- presentation.servlet/  (HTTP endpoints)
-- controller/            (use-case orchestration)
-- service/ + service.impl/ (business logic)
-- dao/ + dao.impl/       (JDBC persistence)
-- factory/               (DAOFactory)
-- config/                (DBConnectionManager)
-- dto/                   (request/response models)
-- mapper/                (Entity <-> DTO)
-- strategy/              (PricingStrategy implementations)
-
-**How persistence is wired**
-- Services depend only on DAO interfaces* (e.g., SystemUserDAO) — not on JDBC classes.
-- Concrete JDBC implementations (e.g., SystemUserDAOImpl) are obtained via DAOFactory.
-- Each DAO implementation uses the *DBConnectionManager Singleton* to open JDBC connections.
-
-**DBConnectionManager (Singleton)**
-
-DBConnectionManager reads DB settings from src/main/resources/db.properties (local-only, ignored by Git) and provides Connection instances for DAOs.
-
-> db.properties is intentionally not committed. Use db.properties.example as a template and create your own local db.properties.
-
-**Design Patterns Implemented**
-* Singleton: DBConnectionManager (central DB config + connection creation)
-* Factory Method / Simple Factory: DAOFactory (returns DAO interfaces backed by DAOImpl)
-* Builder: ReservationRequestDTO.Builder (immutable request construction)
-* Strategy: PricingStrategy (pricing calculation by room type)
-
-### Endpoints
-
-**Auth**
-* POST /login (JSON)
-* POST /logout (JSON)
-
-**Reservations**
-* POST /reservations
-* GET /reservations?reservationNo=...
-* PUT /reservations (update/relocate/cancel)
-* DELETE /reservations?reservationNo=...
-
-**Billing**
-* POST /billing (generate invoice)
-* GET /billing?reservationNo=... (fetch invoice)
-
-**Help**
-* GET /help (health + route list)
-
-**Database setup**
-1. Create a MySQL database (example): oceanview_resort
-2. Run SQL scripts:
-    - 'database/schema.sql'
-    - 'database/data.sql'
-3. Local DB config (NOT committed)
-    - Copy: 'src/main/resources/
-      db.properties.example'
-    - To: 'src/main/resources/
-      db.properties'
-    - Fill in your own credentials.
-
-#### Smoke Tests
-
-See the markdown files under tools/http/ for ready-to-run commands:
-- Auth: SMOKE_TESTS.md
-- Reservations: SMOKE_TESTS-reservation.md
-- Billing: SMOKE_TESTS-billing.md
-
-**CI/CD**
-
-GitHub Actions workflow: .github/workflows/ci.yml runs mvn clean test on pushes to main and via manual trigger.
-
-**Expected keys in db.properties**
-```properties
-db.url=jdbc:mysql://localhost:3306/oceanview_resort?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-db.username=CHANGE_ME
-db.password=CHANGE_ME
+```mermaid
+flowchart TD
+    A[Presentation: Servlets, HTTP/JSON] --> B[Business: Controllers and Services]
+    B --> C[Persistence: DAO interfaces]
+    C --> D[JDBC DAO implementations]
+    E[DAOFactory] -.provides.-> D
+    F[DBConnectionManager Singleton] -.connections.-> D
+    D --> G[(MySQL)]
 ```
 
-#### Common Issues
-- 404: WAR not deployed or wrong context path (expected: /oceanview-resort-rms)
-- DB errors: create src/main/resources/db.properties and start MySQL
-- 400 Invalid JSON: send Content-Type: application/json
+| Package | Responsibility |
+|---|---|
+| `presentation.servlet` | HTTP endpoints |
+| `controller` | Use-case orchestration |
+| `service`, `service.impl` | Business logic |
+| `dao`, `dao.impl` | JDBC persistence |
+| `factory` | `DAOFactory` |
+| `config` | `DBConnectionManager` |
+| `dto` | Request and response models |
+| `mapper` | Entity to DTO mapping |
+| `strategy` | `PricingStrategy` implementations |
+
+### Design patterns
+
+| Pattern | Where | Purpose |
+|---|---|---|
+| Singleton | `DBConnectionManager` | Central database configuration and connection creation |
+| Factory Method / Simple Factory | `DAOFactory` | Returns DAO interfaces backed by their JDBC implementations |
+| Builder | `ReservationRequestDTO.Builder` | Immutable construction of reservation requests |
+| Strategy | `PricingStrategy` | Pricing calculation by room type |
+
+## API
+
+| Area | Method and path | Description |
+|---|---|---|
+| Auth | `POST /login` | Log in (JSON) |
+| Auth | `POST /logout` | Log out (JSON) |
+| Reservations | `POST /reservations` | Create a reservation |
+| Reservations | `GET /reservations?reservationNo=...` | Fetch a reservation |
+| Reservations | `PUT /reservations` | Update, relocate, or cancel |
+| Reservations | `DELETE /reservations?reservationNo=...` | Delete a reservation |
+| Billing | `POST /billing` | Generate an invoice |
+| Billing | `GET /billing?reservationNo=...` | Fetch an invoice |
+| Help | `GET /help` | Health check and route list |
+
+## Getting started
+
+**Prerequisites:** JDK 17, Maven, Tomcat 9 (`javax.servlet`), MySQL.
+
+1. **Create the database**
+
+   Create a MySQL database, for example `oceanview_resort`, then run:
+   - `database/schema.sql`
+   - `database/data.sql`
+
+2. **Configure credentials (local only, never committed)**
+
+   Copy `src/main/resources/db.properties.example` to `src/main/resources/db.properties` and fill in your own values:
+
+   ```properties
+   db.url=jdbc:mysql://localhost:3306/oceanview_resort?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+   db.username=CHANGE_ME
+   db.password=CHANGE_ME
+   ```
+
+3. **Build the WAR**
+
+   ```
+   mvn clean package
+   ```
+
+4. **Deploy and start**
+
+   Copy `target/oceanview-resort-rms.war` to `<TOMCAT_HOME>/webapps/`, then run `<TOMCAT_HOME>/bin/startup.bat`.
+
+5. **Open the app**
+
+   ```
+   http://localhost:8080/oceanview-resort-rms/
+   ```
+
+## Verifying the API
+
+Ready-to-run HTTP commands are in `tools/http/`:
+
+- Auth: `SMOKE_TESTS.md`
+- Reservations: `SMOKE_TESTS-reservation.md`
+- Billing: `SMOKE_TESTS-billing.md`
+
+## Testing and CI
+
+- **Current state:** verification is done through the manual HTTP smoke tests above. There is no automated unit test suite yet.
+- **CI:** the GitHub Actions workflow (`.github/workflows/ci.yml`) runs `mvn clean test` on pushes to `main` and on manual trigger. At present it acts as a compile and build check.
+
+## Common issues
+
+| Symptom | Cause and fix |
+|---|---|
+| 404 | WAR not deployed, or wrong context path (expected `/oceanview-resort-rms`) |
+| Database errors | Create `src/main/resources/db.properties` and make sure MySQL is running |
+| 400 Invalid JSON | Send the header `Content-Type: application/json` |
